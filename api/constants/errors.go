@@ -12,11 +12,6 @@ var (
 		PrettyMessage: "The token provided is invalid.",
 		Status:        401,
 	}
-	ErrorEmailExists = Error{
-		Message:       "Email Exists",
-		PrettyMessage: "The email address is already in use.",
-		Status:        409,
-	}
 	ErrorMissingFields = Error{
 		Message:       "Missing Fields",
 		PrettyMessage: "The request is missing required fields.",

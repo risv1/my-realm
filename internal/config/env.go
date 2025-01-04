@@ -7,7 +7,9 @@ import (
 )
 
 type Env struct {
-	Port string `mapstructure:"PORT"`
+	Port           string `mapstructure:"PORT"`
+	GithubUsername string `mapstructure:"GITHUB_USERNAME"`
+	GithubToken    string `mapstructure:"GITHUB_TOKEN"`
 }
 
 func LoadEnv() *Env {

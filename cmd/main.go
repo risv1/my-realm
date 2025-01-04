@@ -1,6 +1,7 @@
 package main
 
 import (
+	"my-realm/api"
 	"my-realm/api/constants"
 	"my-realm/internal/config"
 	"time"
@@ -21,6 +22,8 @@ func main() {
 			Status:        200,
 		})
 	})
+
+	api.SetupRoutes(app)
 
 	if err := app.Listen(":" + envConfig.Port); err != nil {
 		panic(err)
