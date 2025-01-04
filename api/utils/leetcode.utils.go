@@ -45,12 +45,12 @@ func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
 
 	jsonValue, err := json.Marshal(requestBody)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling request: %v", err)
+		return nil, fmt.Errorf("error marshaling request: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", "https://leetcode.com/graphql", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -62,7 +62,7 @@ func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error making request: %v", err)
+		return nil, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -96,7 +96,7 @@ func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("error decoding response: %v", err)
+		return nil, fmt.Errorf("error decoding response: %w", err)
 	}
 
 	if len(result.Errors) > 0 {

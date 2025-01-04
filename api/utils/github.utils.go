@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const neutral = "#171717"
+const white = "white"
+const gray = "#E5E5E5"
+
 func GenerateLanguagesSVG(languageCount map[string]int, totalRepos int, username, color, background string) string {
 	themeColor := ColorSchemes[color]
 	if themeColor == "" {
@@ -86,9 +90,9 @@ func GenerateLanguagesSVG(languageCount map[string]int, totalRepos int, username
     </svg>`
 
 	var languageBars strings.Builder
-	barBgColor := "#171717"
-	if background == "white" {
-		barBgColor = "#E5E5E5"
+	barBgColor := neutral
+	if background == white {
+		barBgColor = gray
 	}
 
 	const baseHeight = 100
@@ -153,9 +157,9 @@ func GenerateStatsSVG(stats types.ProfileStats, username string, color string, b
 		bgColor = BackgroundSchemes["black"]
 	}
 
-	barBgColor := "#171717"
-	if background == "white" {
-		barBgColor = "#E5E5E5"
+	barBgColor := neutral
+	if background == white {
+		barBgColor = gray
 	}
 
 	maxContributions := 0
