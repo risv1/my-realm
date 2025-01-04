@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"my-realm/api/types"
+	"my-realm/internal/models"
 	"sort"
 	"strings"
 )
@@ -139,7 +139,7 @@ func GenerateLanguagesSVG(languageCount map[string]int, totalRepos int, username
 		languageBars.String())
 }
 
-func GenerateStatsSVG(stats types.ProfileStats, username string, color string, background string) string {
+func GenerateStatsSVG(stats models.ProfileStats, username string, color string, background string) string {
 	if color == "" {
 		color = "red"
 	}

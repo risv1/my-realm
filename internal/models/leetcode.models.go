@@ -1,4 +1,4 @@
-package types
+package models
 
 type LeetCodeStats struct {
 	TotalSolved        int     `json:"totalSolved"`

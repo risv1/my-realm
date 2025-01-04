@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"my-realm/api/constants"
-	"my-realm/api/types"
-	"my-realm/api/utils"
 	"my-realm/internal/config"
+	"my-realm/internal/models"
+	"my-realm/internal/utils"
 	"net/http"
 	"sync"
 	"time"
@@ -150,7 +150,7 @@ func GetStatsAsSVG(c *fiber.Ctx) error {
 	return c.SendString(svg)
 }
 
-func fetchGitHubStats(username, token string) (types.ProfileStats, error) {
+func fetchGitHubStats(username, token string) (models.ProfileStats, error) {
 	query := fmt.Sprintf(`{
         user(login: "%s") {
             contributionsCollection {
@@ -175,12 +175,12 @@ func fetchGitHubStats(username, token string) (types.ProfileStats, error) {
 		"query": query,
 	})
 	if err != nil {
-		return types.ProfileStats{}, err
+		return models.ProfileStats{}, err
 	}
 
 	req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer(requestBody))
 	if err != nil {
-		return types.ProfileStats{}, err
+		return models.ProfileStats{}, err
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -189,19 +189,19 @@ func fetchGitHubStats(username, token string) (types.ProfileStats, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return types.ProfileStats{}, err
+		return models.ProfileStats{}, err
 	}
 	defer resp.Body.Close()
 
-	var graphQLResp types.GraphQLResponse
+	var graphQLResp models.GraphQLResponse
 	if err := json.NewDecoder(resp.Body).Decode(&graphQLResp); err != nil {
-		return types.ProfileStats{}, err
+		return models.ProfileStats{}, err
 	}
 
-	var contributionsByDay []types.DayContribution
+	var contributionsByDay []models.DayContribution
 	for _, week := range graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
 		for _, day := range week.ContributionDays {
-			contributionsByDay = append(contributionsByDay, types.DayContribution{
+			contributionsByDay = append(contributionsByDay, models.DayContribution{
 				Date:              day.Date,
 				ContributionCount: day.ContributionCount,
 				Weekday:           day.Weekday,
@@ -209,7 +209,7 @@ func fetchGitHubStats(username, token string) (types.ProfileStats, error) {
 		}
 	}
 
-	return types.ProfileStats{
+	return models.ProfileStats{
 		TotalContributions: graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.TotalContributions,
 		TotalCommits:       graphQLResp.Data.User.ContributionsCollection.TotalCommitContributions,
 		TotalPRs:           graphQLResp.Data.User.ContributionsCollection.TotalPullRequestContributions,

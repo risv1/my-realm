@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"my-realm/api/types"
+	"my-realm/internal/models"
 	"net/http"
 	"time"
 )
 
-func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
+func FetchLeetCodeStats(username string) (*models.LeetCodeStats, error) {
 	query := `
     query userSessionProgress($username: String!) {
         allQuestionsCount {
@@ -103,7 +103,7 @@ func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
 		return nil, fmt.Errorf("leetcode API error: %s", result.Errors[0].Message)
 	}
 
-	stats := &types.LeetCodeStats{}
+	stats := &models.LeetCodeStats{}
 
 	for _, qCount := range result.Data.AllQuestionsCount {
 		stats.TotalQuestions += qCount.Count
@@ -136,7 +136,7 @@ func FetchLeetCodeStats(username string) (*types.LeetCodeStats, error) {
 	return stats, nil
 }
 
-func GenerateLeetCodeStatsSVG(stats *types.LeetCodeStats, username, color, background string) string {
+func GenerateLeetCodeStatsSVG(stats *models.LeetCodeStats, username, color, background string) string {
 	themeColor := ColorSchemes[color]
 	if themeColor == "" {
 		themeColor = ColorSchemes["red"]

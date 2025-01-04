@@ -1,4 +1,4 @@
-package types
+package models
 
 type ProfileStats struct {
 	TotalContributions int               `json:"total_contributions"`

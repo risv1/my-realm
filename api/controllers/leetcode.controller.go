@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"my-realm/api/constants"
-	"my-realm/api/utils"
+	"my-realm/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
