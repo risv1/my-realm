@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"my-realm/api/constants"
 	"my-realm/internal/config"
-	"my-realm/internal/models"
 	"my-realm/internal/utils"
 	"net/http"
 	"sync"
@@ -71,7 +69,7 @@ func GetProfileStats(c *fiber.Ctx) error {
 	username := c.Query("username", env.GithubUsername)
 	token := env.GithubToken
 
-	stats, err := fetchGitHubStats(username, token)
+	stats, err := utils.FetchGitHubStats(username, token)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(constants.ErrorInternalServerError)
 	}
@@ -134,7 +132,7 @@ func GetStatsAsSVG(c *fiber.Ctx) error {
 	color := c.Query("color", "red")
 	background := c.Query("background", "black")
 
-	stats, err := fetchGitHubStats(username, token)
+	stats, err := utils.FetchGitHubStats(username, token)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(constants.ErrorInternalServerError)
 	}
@@ -148,72 +146,4 @@ func GetStatsAsSVG(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "image/svg+xml")
 	return c.SendString(svg)
-}
-
-func fetchGitHubStats(username, token string) (models.ProfileStats, error) {
-	query := fmt.Sprintf(`{
-        user(login: "%s") {
-            contributionsCollection {
-                totalCommitContributions
-                totalPullRequestContributions
-                totalIssueContributions
-                contributionCalendar {
-                    totalContributions
-                    weeks {
-                        contributionDays {
-                            contributionCount
-                            date
-                            weekday
-                        }
-                    }
-                }
-            }
-        }
-    }`, username)
-
-	requestBody, err := json.Marshal(map[string]string{
-		"query": query,
-	})
-	if err != nil {
-		return models.ProfileStats{}, err
-	}
-
-	req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer(requestBody))
-	if err != nil {
-		return models.ProfileStats{}, err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return models.ProfileStats{}, err
-	}
-	defer resp.Body.Close()
-
-	var graphQLResp models.GraphQLResponse
-	if err := json.NewDecoder(resp.Body).Decode(&graphQLResp); err != nil {
-		return models.ProfileStats{}, err
-	}
-
-	var contributionsByDay []models.DayContribution
-	for _, week := range graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
-		for _, day := range week.ContributionDays {
-			contributionsByDay = append(contributionsByDay, models.DayContribution{
-				Date:              day.Date,
-				ContributionCount: day.ContributionCount,
-				Weekday:           day.Weekday,
-			})
-		}
-	}
-
-	return models.ProfileStats{
-		TotalContributions: graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.TotalContributions,
-		TotalCommits:       graphQLResp.Data.User.ContributionsCollection.TotalCommitContributions,
-		TotalPRs:           graphQLResp.Data.User.ContributionsCollection.TotalPullRequestContributions,
-		TotalIssues:        graphQLResp.Data.User.ContributionsCollection.TotalIssueContributions,
-		ContributionsByDay: contributionsByDay,
-	}, nil
 }

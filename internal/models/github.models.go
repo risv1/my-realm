@@ -1,5 +1,12 @@
 package models
 
+import "time"
+
+type GitHubCache struct {
+	Stats     ProfileStats `json:"stats"`
+	Timestamp time.Time    `json:"timestamp"`
+}
+
 type ProfileStats struct {
 	TotalContributions int               `json:"total_contributions"`
 	TotalCommits       int               `json:"total_commits"`

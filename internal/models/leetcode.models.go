@@ -1,5 +1,12 @@
 package models
 
+import "time"
+
+type LeetCodeCache struct {
+	Stats     *LeetCodeStats `json:"stats"`
+	Timestamp time.Time      `json:"timestamp"`
+}
+
 type LeetCodeStats struct {
 	TotalSolved        int     `json:"totalSolved"`
 	TotalQuestions     int     `json:"totalQuestions"`

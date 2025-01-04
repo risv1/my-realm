@@ -1,15 +1,112 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"my-realm/internal/models"
+	"net/http"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
 const neutral = "#171717"
 const white = "white"
 const gray = "#E5E5E5"
+
+var (
+	githubCache = make(map[string]models.GitHubCache)
+	githubMutex sync.RWMutex
+	githubTTL   = 10 * time.Minute
+)
+
+func FetchGitHubStats(username, token string) (models.ProfileStats, error) {
+	githubMutex.RLock()
+	if cached, exists := githubCache[username]; exists {
+		if time.Since(cached.Timestamp) < githubTTL {
+			githubMutex.RUnlock()
+			return cached.Stats, nil
+		}
+	}
+	githubMutex.RUnlock()
+
+	query := fmt.Sprintf(`{
+        user(login: "%s") {
+            contributionsCollection {
+                totalCommitContributions
+                totalPullRequestContributions
+                totalIssueContributions
+                contributionCalendar {
+                    totalContributions
+                    weeks {
+                        contributionDays {
+                            contributionCount
+                            date
+                            weekday
+                        }
+                    }
+                }
+            }
+        }
+    }`, username)
+
+	requestBody, err := json.Marshal(map[string]string{
+		"query": query,
+	})
+	if err != nil {
+		return models.ProfileStats{}, err
+	}
+
+	req, err := http.NewRequest("POST", "https://api.github.com/graphql", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return models.ProfileStats{}, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return models.ProfileStats{}, err
+	}
+	defer resp.Body.Close()
+
+	var graphQLResp models.GraphQLResponse
+	if err := json.NewDecoder(resp.Body).Decode(&graphQLResp); err != nil {
+		return models.ProfileStats{}, err
+	}
+
+	var contributionsByDay []models.DayContribution
+	for _, week := range graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
+		for _, day := range week.ContributionDays {
+			contributionsByDay = append(contributionsByDay, models.DayContribution{
+				Date:              day.Date,
+				ContributionCount: day.ContributionCount,
+				Weekday:           day.Weekday,
+			})
+		}
+	}
+
+	stats := models.ProfileStats{
+		TotalContributions: graphQLResp.Data.User.ContributionsCollection.ContributionCalendar.TotalContributions,
+		TotalCommits:       graphQLResp.Data.User.ContributionsCollection.TotalCommitContributions,
+		TotalPRs:           graphQLResp.Data.User.ContributionsCollection.TotalPullRequestContributions,
+		TotalIssues:        graphQLResp.Data.User.ContributionsCollection.TotalIssueContributions,
+		ContributionsByDay: contributionsByDay,
+	}
+
+	githubMutex.Lock()
+	githubCache[username] = models.GitHubCache{
+		Stats:     stats,
+		Timestamp: time.Now(),
+	}
+	githubMutex.Unlock()
+
+	return stats, nil
+}
 
 func GenerateLanguagesSVG(languageCount map[string]int, totalRepos int, username, color, background string) string {
 	themeColor := ColorSchemes[color]

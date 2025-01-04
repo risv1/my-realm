@@ -6,10 +6,26 @@ import (
 	"fmt"
 	"my-realm/internal/models"
 	"net/http"
+	"sync"
 	"time"
 )
 
+var (
+	cache      = make(map[string]models.LeetCodeCache)
+	cacheMutex sync.RWMutex
+	cacheTTL   = 10 * time.Minute
+)
+
 func FetchLeetCodeStats(username string) (*models.LeetCodeStats, error) {
+	cacheMutex.RLock()
+	if cached, exists := cache[username]; exists {
+		if time.Since(cached.Timestamp) < cacheTTL {
+			cacheMutex.RUnlock()
+			return cached.Stats, nil
+		}
+	}
+	cacheMutex.RUnlock()
+
 	query := `
     query userSessionProgress($username: String!) {
         allQuestionsCount {
@@ -132,6 +148,13 @@ func FetchLeetCodeStats(username string) (*models.LeetCodeStats, error) {
 	if totalSubmissions > 0 {
 		stats.AcceptanceRate = float64(acceptedSubmissions) / float64(totalSubmissions) * 100
 	}
+
+	cacheMutex.Lock()
+	cache[username] = models.LeetCodeCache{
+		Stats:     stats,
+		Timestamp: time.Now(),
+	}
+	cacheMutex.Unlock()
 
 	return stats, nil
 }
