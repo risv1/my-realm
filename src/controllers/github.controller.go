@@ -3,9 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"my-realm/api/constants"
 	"my-realm/internal/config"
 	"my-realm/internal/utils"
+	"my-realm/src/constants"
 	"net/http"
 	"sync"
 	"time"
@@ -18,7 +18,7 @@ type Repository struct {
 }
 
 func GetMostUsedLanguages(c *fiber.Ctx) error {
-	username := c.Query("username", config.LoadEnv().GithubUsername)
+	username := c.Query("username", "risv1")
 	githubAPIURL := fmt.Sprintf("https://api.github.com/users/%s/repos", username)
 	resp, err := http.Get(githubAPIURL)
 	if err != nil {
@@ -66,7 +66,7 @@ var (
 
 func GetProfileStats(c *fiber.Ctx) error {
 	env := config.LoadEnv()
-	username := c.Query("username", env.GithubUsername)
+	username := c.Query("username", "risv1")
 	token := env.GithubToken
 
 	stats, err := utils.FetchGitHubStats(username, token)
@@ -85,7 +85,7 @@ func GetProfileStats(c *fiber.Ctx) error {
 }
 
 func GetLanguagesAsSVG(c *fiber.Ctx) error {
-	username := c.Query("username", config.LoadEnv().GithubUsername)
+	username := c.Query("username", "risv1")
 	color := c.Query("color", "red")
 	background := c.Query("background", "black")
 
@@ -127,7 +127,7 @@ func GetStatsAsSVG(c *fiber.Ctx) error {
 	cacheMutex.RUnlock()
 
 	env := config.LoadEnv()
-	username := c.Query("username", env.GithubUsername)
+	username := c.Query("username", "risv1")
 	token := env.GithubToken
 	color := c.Query("color", "red")
 	background := c.Query("background", "black")

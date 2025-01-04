@@ -1,17 +1,14 @@
 package main
 
 import (
-	"my-realm/api"
-	"my-realm/api/constants"
-	"my-realm/internal/config"
+	"my-realm/src"
+	"my-realm/src/constants"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	envConfig := config.LoadEnv()
-
 	app := fiber.New()
 
 	app.Get("/api/health", func(c *fiber.Ctx) error {
@@ -23,9 +20,9 @@ func main() {
 		})
 	})
 
-	api.SetupRoutes(app)
+	src.SetupRoutes(app)
 
-	if err := app.Listen(":" + envConfig.Port); err != nil {
+	if err := app.Listen(":8000"); err != nil {
 		panic(err)
 	}
 }

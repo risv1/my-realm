@@ -1,7 +1,7 @@
-package api
+package src
 
 import (
-	"my-realm/api/controllers"
+	"my-realm/src/controllers"
 
 	"github.com/gofiber/fiber/v2"
 )
