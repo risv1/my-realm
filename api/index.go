@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +21,8 @@ func handler() http.HandlerFunc {
 	app := fiber.New(fiber.Config{
 		ProxyHeader: "X-Forwarded-For",
 	})
+
+	app.Use(cors.New())
 
 	app.Get("/api/health", func(c *fiber.Ctx) error {
 		return c.JSON(constants.Response{
